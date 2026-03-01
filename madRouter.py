@@ -1,12 +1,13 @@
 from scapy.all import *
+import ipaddress
 
 sniffed_iface = 'enp0s3'
-routing_table = [('192.168.0','enp0s3'), ('192.168.56','enp0s8')]
+routing_table = [('192.168.0.0/24','enp0s3'), ('192.168.56.0/24','enp0s8')]
 
 def send_packet(packet):
-    send_to = [(ip,iface) for ip,iface in routing_table if packet[IP].dst.startswith(ip)]
-    if((len(send_to) != 0) and (send_to[0][1] != sniffed_iface)):
-        sendp(packet, iface=send_to[0][1])
+    iface_to_send = [iface for ip,iface in routing_table if ipaddress.ip_address(packet[IP].dst) in ipaddress.ip_network(ip)]
+    if((len(iface_to_send) != 0) and (iface_to_send[0] != sniffed_iface)):
+        sendp(packet, iface=iface_to_send[0])
 
 
 def main():
